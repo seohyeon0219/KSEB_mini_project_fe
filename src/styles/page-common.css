@@ -2,7 +2,7 @@
 .info-main-content {
     position: relative;
     /* scroll-snap-align: start; */
-    width: 100%;
+    width: 100%;;
 }
 
 .title-container {
@@ -113,12 +113,13 @@
 
     background-color: var(--primary-color);
     border-radius: 15px;
+    cursor: pointer;
 }
 
 /* sign 버튼 활성 상태 */
-.auth-sign-button.active {
+/* .auth-sign-button.active {
     cursor: pointer;
-}
+} */
 
 /* 모달 */
 
