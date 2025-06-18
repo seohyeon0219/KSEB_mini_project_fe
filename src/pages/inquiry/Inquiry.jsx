@@ -6,6 +6,7 @@ import './Inquiry.css';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import InquiryInput from '../../components/ui/inquiry-input/InquiryInput';
+import ModalOverlay from '../../components/ui/modal-overlay/ModalOverlay';
 
 export default function Inquiry() {
     const navigate = useNavigate();
@@ -72,7 +73,7 @@ export default function Inquiry() {
             <Footer />
             {/* 문의하기 모달 */}
             {showModal && (
-                <div className='modal-overlay'>
+                <ModalOverlay>
                     <div className='inquiry-modal-container'>
                         <h2 className='inquiry-modal-title'>문의하기 완료 !</h2>
                         <div className='inquiry-modal-text'>
@@ -81,7 +82,7 @@ export default function Inquiry() {
                         </div>
                         <button className='inquiry-modal-home-button' onClick={goToHome}>홈으로 가기</button>
                     </div>
-                </div>
+                </ModalOverlay>
             )}
         </div>
     )
