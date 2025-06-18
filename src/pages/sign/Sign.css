@@ -4,6 +4,10 @@
     align-items: center;
 
     padding-top: 80px;
+
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .auth-wrapper {
