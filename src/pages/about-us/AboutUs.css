@@ -1,0 +1,47 @@
+.member-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 80px;
+
+    margin-top: 100px;
+    padding: 50px 0px;
+}
+
+.member {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.member:nth-child(even) {
+    flex-direction: row-reverse;
+}
+
+.navy-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    height: 80px;
+    width: 250px;
+
+    background-color: var(--primary-color);
+}
+
+.navy-ribbon > .name {
+    margin-right: 20px;
+
+    color: var(--white-color);
+}
+
+.member-text-top {
+    font-size: 20px;
+    font-weight: 500;
+    color: black;
+}
+
+.member-text-bottom {
+    margin-top: 10px;
+    color: black;
+} 

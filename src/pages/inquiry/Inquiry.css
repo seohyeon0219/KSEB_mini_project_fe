@@ -1,0 +1,145 @@
+.inquiry-main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    background-color: var(--primary-color);
+
+    padding-top: 100px;
+    gap: 40px;
+
+    width: 100%;
+}
+
+.inquiry-title, .inquiry-subtitle p {
+    color: var(--white-color);
+}
+
+.inquiry-title {
+    font-size: 30px;
+    font-weight: 400;
+}
+
+.inquiry-section {
+    display: flex;
+
+    width: 100%;
+    gap: 10px;
+}
+
+.inquiry-subtitle {
+    margin-left: 100px;
+
+    flex: 40%;
+    white-space: nowrap;
+}
+
+.inquiry-subtitle-top p:nth-child(1) {
+    font-weight: 900;
+    font-size: 60px;
+}
+
+.inquiry-subtitle-top p:nth-child(2), .inquiry-subtitle-top p:nth-child(3) {
+    font-weight: 900;
+    font-size: 40px;
+}
+
+.inquiry-subtitle-bottom {
+    margin-top: 50px;
+}
+
+.inquiry-box {
+    display: flex;
+    flex-direction: column;
+
+    flex: 60%;
+
+    border-top-left-radius: 50px;
+    
+    background-color: var(--white-color);
+    padding-top: 70px;
+    padding-left: 30px;
+    
+    gap: 30px;
+
+}
+
+.inquiry-textarea {
+    height: 300px;
+    width: 600px;
+
+    padding-left: 12px;
+    padding-top: 12px;
+
+    border: 1px solid #C4C4C4;
+    border-radius: 10px;
+
+    resize: none;
+}
+
+.inquiry-textarea:focus::placeholder {
+    color: transparent;
+}
+
+.inquiry-button {
+    height: 40px;
+    width: 600px;
+
+    border-radius: 10px;
+    color: var(--white-color);
+    background-color: var(--primary-color);
+
+    cursor: pointer;
+
+    margin-bottom: 50px;
+}
+
+/* modal */
+.inquiry-modal-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 20px;
+
+    background-color: var(--white-color);
+
+    height: 350px;
+    width: 300px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    gap: 60px;
+}
+
+.inquiry-modal-title {
+    color: var(--primary-color);
+}
+
+.inquiry-modal-text > p {
+    text-align: center;
+    color: #232363;
+}
+
+.inquiry-modal-home-button {
+    height: 50px;
+    width: 150px;
+    font-weight: 400;
+
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+
+    border-radius: 50px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    cursor: pointer;
+}
+
+/* placeholder 폰트 지정 */
+.inquiry-textarea::placeholder {
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #999;
+}

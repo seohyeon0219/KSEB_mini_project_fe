@@ -1,0 +1,60 @@
+/* 로고 */
+.header-white {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 170px;
+    z-index: 10;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background-color: transparent;
+}
+/* body 에 padding-top: 80px 주기 */
+
+.risk-catch-logo-header-main {
+    height: 90px;
+    cursor: pointer;
+}
+
+.white-header-line {
+    height: 2px;
+    width: 90%;
+
+    background-color: #ffffff;
+    border: none;
+}
+
+/* nav */
+.nav-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 90%;
+    
+    margin-top: 10px;
+}
+
+.nav-left-wrapper, .nav-right-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 50px;
+}
+/* 선택자 우선순위 높임 */
+.header-button.header-sign-in-up-button {
+    border: 2px solid var(--white-color);
+}
+
+/* 현재 페이지 */
+.header-button.active {
+    color: var(--white-color);
+    border-radius: 8px;
+}

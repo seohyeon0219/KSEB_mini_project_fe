@@ -1,0 +1,16 @@
+/* 최대 너비 제한 */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding-top: 170px;
+    scroll-snap-type: start;
+}
+

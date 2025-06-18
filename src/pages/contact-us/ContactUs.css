@@ -1,0 +1,50 @@
+.sub-title {
+    color: black;
+}
+
+.contact-us-info-section {
+    position: relative;
+
+    display: flex;
+
+    padding: 100px;
+
+    gap: 100px;
+}
+
+.contact-us-company-name {
+    position: absolute;
+    top: -50px;
+    right: 0px;
+
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+
+    color: var(--primary-color);
+    background-color: var(--white-color);
+
+    padding: 8px 50px;
+}
+
+.contact-us-info-box {
+    display: flex;
+    flex-direction: column;
+
+    gap: 70px;
+}
+
+.info-title {
+    margin-bottom: 25px;
+    color: black;
+}
+
+.info-navy-line {
+    height: 2px;
+    background-color: var(--primary-color);
+
+    margin-bottom: 10px;
+}
+
+.info-text {
+    color: black;
+}

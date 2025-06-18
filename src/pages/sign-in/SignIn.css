@@ -1,0 +1,62 @@
+.auth-sign-in-form-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding-top: 50px;
+}
+
+.sign-find-code-button {
+    padding-left: 10px;
+    color: rgb(77, 77, 77);
+    /* background-color: #232363; */
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+
+/* modal */
+.sign-in-modal-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    position: relative;
+
+    border-radius: 20px;
+
+    background-color: var(--white-color);
+
+    height: 500px;
+    width: 350px;
+
+    gap: 50px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.sign-in-modal-navy-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    background-color: var(--primary-color);
+    height: 270px;
+    width: 350px;
+
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.check-icon {
+    font-size: 100px;
+    color: #ffffff;
+
+    z-index: 1;
+}
+
+.sign-in-modal-text p {
+    text-align: center;
+    color: black;
+}

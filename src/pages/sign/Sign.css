@@ -1,0 +1,166 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 80px;
+}
+
+.auth-wrapper {
+    position: relative;
+
+    width: 800px;
+    height: 320px;
+
+}
+
+/* sign-in-section (왼쪽) */
+
+.left-sign-in-section {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    width: 60%;
+    height: 90%;
+
+    padding: 60px;
+    background-color: var(--primary-color);
+
+    box-shadow : 0 4px 25px rgba(0, 0, 0, 0.3);
+
+    clip-path: polygon(0 0, 100% 0, 70% 100%, 0 100%);
+
+    transition: all 0.15 ease;
+}
+
+.right-sign-up-section {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+
+    width: 60%;
+    height: 100%;
+
+    background-color: #f8f9fa;
+    border: 1px solid var(--primary-color);    
+    box-shadow : 0 4px 25px rgba(0, 0, 0, 0.3);
+
+    padding: 60px;
+
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.left-sign-in-text {
+    font-size: 16px;
+
+    margin-top: 40px;
+    white-space: nowrap;
+}
+
+.left-sign-in-text > p {
+    color: #f8f9fa;
+}
+
+/* sign-up-section (오른쪽) */
+.right-sign-up-text{
+    font-size: 16px;
+    color: var(--primary-color);
+
+    margin-top: 40px;
+    white-space: nowrap;
+}
+
+.right-sign-up-text > p {
+    color: var(--primary-color);
+}
+
+.left-sign-in-section .left-sign-in-button {
+    height: 60px;
+    width: 150px;
+
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border: 1px solid #ffffff;
+    border-radius: 30px;
+
+    font-size: 20px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.left-sign-in-button:hover {
+    transform: scale(1.05);
+    /* box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3); */
+}
+
+.left-sign-in-button:active {
+    transform: scale(1.05);
+    /* box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3); */
+}
+
+
+.right-sign-up-section .right-sign-up-button {
+    height: 60px;
+    width: 150px;
+
+    color: var(--primary-color);
+    background-color: #ffffff;
+    border: 1px solid var(--primary-color);
+
+    border-radius: 30px;
+
+    font-size: 20px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.right-sign-up-button:hover {
+    transform: scale(1.05);
+}
+
+.right-sign-up-button:active {
+    transform: scale(1.05);
+}
+
+.right-sign-up-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%; /* 대각선 구간의 너비 */
+    height: 100%;
+    
+    /* border 대신 배경으로 선 그리기 */
+    background: linear-gradient(
+        to bottom right,
+        transparent 49.75%,
+        var(--primary-color) 49.75%,
+        var(--primary-color) 50.25%,
+        transparent 50.25%
+    );
+    
+    transform-origin: top left;
+    z-index: 1; /* 내용보다 위에 */
+}
+
+/* 커서 올렸을 때 효과 */
+/* .left-sign-in-section:hover {
+    height: 95%;
+}
+
+.right-sign-up-section:hover {
+    height: 115%;
+} */

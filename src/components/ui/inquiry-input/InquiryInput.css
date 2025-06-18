@@ -1,0 +1,18 @@
+.inquiry-input {
+    height: 40px;
+    width: 600px;
+
+    margin-right: 10px;
+    padding-left: 10px;
+
+    border: 1px solid #C4C4C4;
+    border-radius: 10px;
+
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.inquiry-input:focus::placeholder {
+    color: transparent;
+}

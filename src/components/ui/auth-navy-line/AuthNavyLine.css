@@ -1,0 +1,5 @@
+.auth-navy-line {
+    height: 2px;
+    width: 1000px;
+    background-color: var(--primary-color);
+}

@@ -1,0 +1,97 @@
+.auth-sign-up-form-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 50px;
+}
+
+.sign-up-form {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+
+    margin-top: 10px;
+}
+
+/* modal */
+.sign-up-modal-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    position: relative;
+
+    border-radius: 20px;
+
+    background-color: var(--white-color);
+
+    height: 500px;
+    width: 350px;
+
+    gap: 70px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.sign-up-modal-navy-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    background-color: var(--primary-color);
+    height: 120px;
+    width: 350px;
+
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.sign-up-modal-middle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sign-up-modal-subtitle {
+    margin-top: 10px;
+}
+
+.sign-up-modal-company-code {
+    display: flex;
+    
+    background-color: var(--secondary-color);
+    padding: 15px 40px;
+    margin-top: 15px;
+    border: 1px solid black;
+    border-radius: 10px;
+    overflow: hidden;
+
+    gap: 30px;
+}
+
+.copy-button {
+    padding: 5px;
+}
+
+.sign-up-modal-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 20px;
+}
+
+.sign-up-modal-text {
+    color: #4E4E4E;
+}
+
+/* 모달 업체 코드 */
+.auth-company-code {
+    font-size: 20px;
+    font-weight: 800;
+    color: black;
+}

@@ -1,0 +1,44 @@
+.auth-find-code-form-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 50px;
+}
+
+.auth-find-code-form-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 50px;
+}
+
+.find-code-form {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+
+    margin-top: 30px;
+}
+
+.auth-find-code-button {
+    height: 50px;
+    width: 150px;
+
+    color: var(--white-color);
+    font-size: 15px;
+
+    background-color: var(--primary-color);
+    border-radius: 15px;
+    border: none;
+
+    margin-top: 50px;
+
+    cursor: pointer;
+}
+
+

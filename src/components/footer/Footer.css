@@ -1,0 +1,45 @@
+footer {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    margin: 0px 30px 30px 30px;
+    padding: 100px 0 0 0;
+    gap: 20px;
+
+    margin-top: auto;
+}
+
+.risk-catch-logo-footer {
+    height: 70px;
+    cursor: pointer;
+}
+
+.footer-right-top, .footer-right-bottom {
+    white-space: nowrap;
+}
+
+.footer-right-top a, .footer-right-bottom a {
+    margin-right: 10px;
+    color: #636363;
+}
+
+.footer-button {
+    font-size: 15px;
+}
+
+.footer-line {
+    width: 2px;
+    min-width: 2px;
+    height: 60px;
+
+    background-color: #636363;
+    border: none;
+}
+
+.footer-text {
+    color: #636363;
+    font-size: 15px;
+
+    white-space: nowrap;
+}
