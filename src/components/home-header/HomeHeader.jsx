@@ -35,6 +35,10 @@ export default function HomeHeader() {
         navigate('/solution');
     }
 
+    const goToMyPage = () => {
+        navigate('/my-page');
+    }
+
     // 현재 페이지 확인
     const isCurrentPage = (path) => {
         return location.pathname === path;
@@ -43,7 +47,7 @@ export default function HomeHeader() {
     // 로그인 상태에 따라서 버튼 처리 다르게
     const handleSignButtonClick = () => {
         if (isLoggedIn) {
-            goToMypage();
+            goToMyPage();
         } else {
             goToSign();
         }
@@ -69,7 +73,7 @@ export default function HomeHeader() {
                         <HeaderWhiteButton 
                             label={isLoggedIn ? 'MY PAGE' : 'SIGN IN / UP'}
                             onClick={handleSignButtonClick} className={`header-sign-in-up-button ${
-                                isCurrentPage('/sign') || isCurrentPage('/sign-in') || isCurrentPage('/sign-up') || isCurrentPage('/mypage')
+                                isCurrentPage('/sign') || isCurrentPage('/sign-in') || isCurrentPage('/sign-up') || isCurrentPage('/my-page')
                                 ? 'active' 
                                 : ''
                         }`}/>
