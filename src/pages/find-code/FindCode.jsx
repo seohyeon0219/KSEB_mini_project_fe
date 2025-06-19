@@ -48,7 +48,7 @@ export default function FindCode() {
                 phone: number
             });
             
-            const response = await fetch(`http://165.246.80.74:8000/api/accounts/get-code/?${params}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/get-code/?${params}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

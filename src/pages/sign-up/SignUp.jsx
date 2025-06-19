@@ -92,7 +92,7 @@ export default function SignUp() {
         
         setIsCheckingEmail(true);
         try {
-            const response = await fetch('http://165.246.80.74:8000/api/accounts/duplicate/email', {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/duplicate/email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export default function SignUp() {
         
         setIsCheckingNumber(true);
         try {
-            const response = await fetch('http://165.246.80.74:8000/api/accounts/duplicate/phone', {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/duplicate/phone`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -184,7 +184,7 @@ export default function SignUp() {
         setIsLoading(true);
         
         try {
-            const response = await fetch('http://165.246.80.74:8000/api/accounts/signup', {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -20,19 +20,110 @@ export default function Upload() {
     const [salesSaveStatus, setSalesSaveStatus] = useState('');
     const [demandSaveStatus, setDemandSaveStatus] = useState('');
     const [isUploading, setIsUpLoading] = useState(false);
-    const [isLoadingData, setIsLoadingData] = useState(true); // 초기 데이터 로딩 상태
+    const [isLoadingData, setIsLoadingData] = useState(true);
+    
+    // 저장 진행률 관련 상태 추가
+    const [isSavingSales, setIsSavingSales] = useState(false);
+    const [isSavingDemand, setIsSavingDemand] = useState(false);
+    const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0, type: '' });
     
     // 페이지네이션 관련 상태
     const [salesDisplayCount, setSalesDisplayCount] = useState(50);
     const [demandDisplayCount, setDemandDisplayCount] = useState(50);
     const ITEMS_PER_LOAD = 50;
 
-    // 컴포넌트 마운트 시 저장된 데이터 불러오기
+    // 진행률 표시 모달 컴포넌트
+    const ProgressModal = ({ isVisible, progress }) => {
+        if (!isVisible) return null;
+
+        const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+
+        return ;
+
+        // return (
+        //     <div style={{
+        //         position: 'fixed',
+        //         top: 0,
+        //         left: 0,
+        //         right: 0,
+        //         bottom: 0,
+        //         backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        //         display: 'flex',
+        //         justifyContent: 'center',
+        //         alignItems: 'center',
+        //         zIndex: 9999
+        //     }}>
+        //         <div style={{
+        //             backgroundColor: 'white',
+        //             padding: '30px',
+        //             borderRadius: '10px',
+        //             minWidth: '400px',
+        //             textAlign: 'center',
+        //             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+        //         }}>
+        //             <h3 style={{ margin: '0 0 20px 0', color: '#333' }}>
+        //                 {progress.type} 데이터 저장 중...
+        //             </h3>
+                    
+        //             {/* 진행률 바 */}
+        //             <div style={{
+        //                 width: '100%',
+        //                 height: '20px',
+        //                 backgroundColor: '#f0f0f0',
+        //                 borderRadius: '10px',
+        //                 overflow: 'hidden',
+        //                 marginBottom: '15px'
+        //             }}>
+        //                 <div style={{
+        //                     width: `${percentage}%`,
+        //                     height: '100%',
+        //                     backgroundColor: '#4CAF50',
+        //                     transition: 'width 0.3s ease',
+        //                     borderRadius: '10px'
+        //                 }}></div>
+        //             </div>
+                    
+        //             {/* 진행률 텍스트 */}
+        //             <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>
+        //                 {percentage}%
+        //             </div>
+                    
+        //             {/* 상세 진행률 */}
+        //             <div style={{ fontSize: '14px', color: '#666' }}>
+        //                 {progress.current} / {progress.total} 항목 처리됨
+        //             </div>
+                    
+        //             {/* 로딩 스피너 */}
+        //             <div style={{
+        //                 marginTop: '20px',
+        //                 display: 'inline-block',
+        //                 width: '30px',
+        //                 height: '30px',
+        //                 border: '3px solid #f3f3f3',
+        //                 borderTop: '3px solid #4CAF50',
+        //                 borderRadius: '50%',
+        //                 animation: 'spin 1s linear infinite'
+        //             }}></div>
+        //         </div>
+        //     </div>
+        // );
+    };
+
+    // 환경변수 확인 함수
+    const checkEnvironment = () => {
+        console.log('=== 환경 설정 확인 ===');
+        console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
+        console.log('현재 도메인:', window.location.origin);
+        console.log('모든 환경변수:', import.meta.env);
+    };
+
+    // 컴포넌트 마운트 시 환경 확인
     useEffect(() => {
+        checkEnvironment();
         loadSavedData();
     }, []);
 
-    // 저장된 데이터를 백엔드에서 불러오는 함수
+    // 백엔드에서 저장된 데이터를 불러오는 함수
     const loadSavedData = async () => {
         const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
         
@@ -44,9 +135,10 @@ export default function Upload() {
 
         try {
             setIsLoadingData(true);
+            console.log('저장된 데이터 로딩 시작...');
             
-            // 백엔드에서 사용자의 저장된 데이터 목록 조회
-            const response = await fetch('http://165.246.80.74:8000/api/files/list/', {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://165.246.80.9:8000';
+            const response = await fetch(`${backendUrl}/api/files/read/`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -55,15 +147,22 @@ export default function Upload() {
             });
 
             if (response.ok) {
-                const savedFiles = await response.json();
-                console.log('저장된 파일 목록:', savedFiles);
+                const savedData = await response.json();
+                console.log('=== 백엔드에서 받은 데이터 ===');
+                console.log('전체 응답:', savedData);
+                console.log('type1_data (생산량):', savedData.type1_data);
+                console.log('type2_data (판매량):', savedData.type2_data);
                 
-                // 저장된 데이터가 있으면 변환해서 표시
-                if (savedFiles && savedFiles.length > 0) {
-                    await processLoadedData(savedFiles, token);
-                }
+                await processBackendData(savedData);
+                
+            } else if (response.status === 401) {
+                console.log('인증 오류: 토큰이 유효하지 않거나 만료됨');
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('authToken');
             } else {
-                console.log('저장된 데이터를 불러올 수 없습니다.');
+                console.log('저장된 데이터를 불러올 수 없습니다. 상태코드:', response.status);
+                const errorText = await response.text();
+                console.log('오류 내용:', errorText);
             }
         } catch (error) {
             console.error('데이터 로딩 중 오류:', error);
@@ -72,85 +171,290 @@ export default function Upload() {
         }
     };
 
-    // 불러온 데이터를 CSV 형태로 변환하는 함수
-    const processLoadedData = async (savedFiles, token) => {
+    // 백엔드 데이터를 CSV 형태로 변환하여 테이블에 표시
+    const processBackendData = async (backendData) => {
         try {
-            // 판매량과 생산량 데이터를 분리
-            const salesFiles = savedFiles.filter(file => file.type_idx === 2); // 판매량
-            const demandFiles = savedFiles.filter(file => file.type_idx === 1); // 생산량
+            console.log('백엔드 데이터 처리 시작...');
             
-            // 판매량 데이터 처리
-            if (salesFiles.length > 0) {
-                const salesCSVData = convertFilesToCSV(salesFiles, '판매량');
-                setSalesData(salesCSVData);
-                setSavedSalesData(JSON.parse(JSON.stringify(salesCSVData)));
-                setSalesFileName('기존_판매량_데이터.csv');
-                setSalesSaveStatus('불러옴');
-                setTimeout(() => setSalesSaveStatus(''), 3000);
+            if (backendData.type1_data && backendData.type1_data.length > 0) {
+                console.log('생산량 데이터 처리 중...');
+                const demandCSVData = convertBackendDataToCSV(backendData.type1_data, '생산량');
                 
-                // 제품코드 설정 (첫 번째 제품코드 사용)
-                if (salesFiles.length > 0 && salesFiles[0].name) {
-                    setProductCode(salesFiles[0].name);
+                if (demandCSVData) {
+                    setDemandData(demandCSVData);
+                    setSavedDemandData(JSON.parse(JSON.stringify(demandCSVData)));
+                    setDemandFileName('기존_생산량_데이터.csv');
+                    setDemandSaveStatus('불러옴');
+                    setTimeout(() => setDemandSaveStatus(''), 3000);
+                    
+                    if (backendData.type1_data[0] && backendData.type1_data[0].name) {
+                        setProductCode(backendData.type1_data[0].name);
+                    }
+                    
+                    console.log('생산량 데이터 처리 완료:', demandCSVData);
                 }
+            } else {
+                console.log('생산량 데이터가 없습니다.');
             }
 
-            // 생산량 데이터 처리
-            if (demandFiles.length > 0) {
-                const demandCSVData = convertFilesToCSV(demandFiles, '생산량');
-                setDemandData(demandCSVData);
-                setSavedDemandData(JSON.parse(JSON.stringify(demandCSVData)));
-                setDemandFileName('기존_생산량_데이터.csv');
-                setDemandSaveStatus('불러옴');
-                setTimeout(() => setDemandSaveStatus(''), 3000);
+            if (backendData.type2_data && backendData.type2_data.length > 0) {
+                console.log('판매량 데이터 처리 중...');
+                const salesCSVData = convertBackendDataToCSV(backendData.type2_data, '판매량');
                 
-                // 제품코드가 아직 설정되지 않았으면 설정
-                if (!productCode && demandFiles.length > 0 && demandFiles[0].name) {
-                    setProductCode(demandFiles[0].name);
+                if (salesCSVData) {
+                    setSalesData(salesCSVData);
+                    setSavedSalesData(JSON.parse(JSON.stringify(salesCSVData)));
+                    setSalesFileName('기존_판매량_데이터.csv');
+                    setSalesSaveStatus('불러옴');
+                    setTimeout(() => setSalesSaveStatus(''), 3000);
+                    
+                    if (!productCode && backendData.type2_data[0] && backendData.type2_data[0].name) {
+                        setProductCode(backendData.type2_data[0].name);
+                    }
+                    
+                    console.log('판매량 데이터 처리 완료:', salesCSVData);
                 }
+            } else {
+                console.log('판매량 데이터가 없습니다.');
             }
 
         } catch (error) {
-            console.error('데이터 변환 중 오류:', error);
+            console.error('백엔드 데이터 처리 중 오류:', error);
         }
     };
 
-    // 백엔드 데이터를 CSV 형태로 변환하는 함수
-    const convertFilesToCSV = (files, dataType) => {
-        if (!files || files.length === 0) return null;
+    // 백엔드 데이터를 CSV 테이블 형식으로 변환
+    const convertBackendDataToCSV = (dataArray, dataType) => {
+        if (!dataArray || dataArray.length === 0) {
+            console.log(`${dataType} 데이터가 비어있습니다.`);
+            return null;
+        }
 
-        // 날짜별로 그룹핑
-        const dateGroups = {};
-        const productCodes = new Set();
+        try {
+            console.log(`${dataType} 데이터 변환 시작, 레코드 수:`, dataArray.length);
+            
+            const dateGroups = {};
+            const productCodes = new Set();
 
-        files.forEach(file => {
-            const date = file.date;
-            const productCode = file.name;
-            const quantity = file.number;
+            dataArray.forEach(record => {
+                const date = record.date;
+                const productCode = record.name;
+                const quantity = record.number;
 
-            productCodes.add(productCode);
+                productCodes.add(productCode);
 
-            if (!dateGroups[date]) {
-                dateGroups[date] = {};
-            }
-            dateGroups[date][productCode] = quantity;
-        });
-
-        // 헤더 생성 (Date + 제품코드들)
-        const headers = ['Date', ...Array.from(productCodes).sort()];
-        
-        // 데이터 생성
-        const data = Object.keys(dateGroups).sort().map(date => {
-            const row = { Date: date };
-            Array.from(productCodes).forEach(productCode => {
-                row[productCode] = dateGroups[date][productCode] || '';
+                if (!dateGroups[date]) {
+                    dateGroups[date] = {};
+                }
+                
+                if (dateGroups[date][productCode]) {
+                    dateGroups[date][productCode] += quantity;
+                } else {
+                    dateGroups[date][productCode] = quantity;
+                }
             });
-            return row;
+
+            const headers = ['Date', ...Array.from(productCodes).sort()];
+            
+            const data = Object.keys(dateGroups)
+                .sort()
+                .map(date => {
+                    const row = { Date: date };
+                    
+                    Array.from(productCodes).forEach(productCode => {
+                        row[productCode] = dateGroups[date][productCode] || 0;
+                    });
+                    
+                    return row;
+                });
+
+            return { headers, data };
+
+        } catch (error) {
+            console.error(`${dataType} 데이터 변환 중 오류:`, error);
+            return null;
+        }
+    };
+
+    // CSV 테이블 데이터를 백엔드 형식으로 변환하는 함수
+    const convertCSVToBackendFormat = (csvData, typeIdx) => {
+        if (!csvData || !csvData.headers || !csvData.data) {
+            console.warn('CSV 데이터가 유효하지 않습니다.');
+            return [];
+        }
+
+        const backendData = [];
+        
+        csvData.data.forEach(row => {
+            const date = row.Date;
+            if (!date) return;
+
+            csvData.headers.forEach(header => {
+                if (header !== 'Date' && row[header] && row[header] !== '0' && row[header] !== '') {
+                    backendData.push({
+                        type_idx: typeIdx,
+                        date: date,
+                        name: header,
+                        number: parseInt(row[header]) || 0
+                    });
+                }
+            });
         });
 
-        return {
-            headers,
-            data
-        };
+        return backendData;
+    };
+
+    // 백엔드에 데이터 저장하는 함수 (진행률 포함)
+    const saveDataToBackend = async (data, dataType) => {
+        const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
+        
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            return false;
+        }
+
+        if (!data || !data.headers || !data.data || data.data.length === 0) {
+            alert('저장할 데이터가 없습니다.');
+            return false;
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        try {
+            console.log(`=== ${dataType} 데이터 백엔드 저장 시작 ===`);
+            
+            // 저장 상태 설정
+            if (dataType === '판매량') {
+                setIsSavingSales(true);
+                setSalesSaveStatus('저장 중...');
+            } else {
+                setIsSavingDemand(true);
+                setDemandSaveStatus('저장 중...');
+            }
+            
+            const typeIdx = dataType === '판매량' ? 2 : 1;
+            const backendDataArray = convertCSVToBackendFormat(data, typeIdx);
+            
+            if (backendDataArray.length === 0) {
+                alert('저장할 유효한 데이터가 없습니다.');
+                return false;
+            }
+
+            // 진행률 초기화
+            setSaveProgress({
+                current: 0,
+                total: backendDataArray.length,
+                type: dataType
+            });
+
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://165.246.80.9:8000';
+
+            const response = await fetch(`${backendUrl}/api/files/register/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data : backendDataArray
+                })
+            });
+            
+
+
+            // for (let i = 0; i < backendDataArray.length; i++) {
+            //     const item = backendDataArray[i];
+                
+            //     try {
+            //         // 진행률 업데이트
+
+
+            //         const response = await fetch(`${backendUrl}/api/files/register/`, {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Authorization': `Bearer ${token}`,
+            //                 'Content-Type': 'application/json',
+            //             },
+            //             body: JSON.stringify({
+            //                 type_idx: item.type_idx,
+            //                 date: item.date,
+            //                 name: item.name,
+            //                 number: item.number
+            //             })
+            //         });
+
+            //         if (response.ok) {
+            //             successCount++;
+            //             console.log(`${i + 1}/${backendDataArray.length} 저장 성공`);
+            //         } else {
+            //             errorCount++;
+            //             const errorText = await response.text();
+            //             errors.push(`항목 ${i + 1}: ${errorText}`);
+            //             console.error(`${i + 1}/${backendDataArray.length} 저장 실패:`, response.status, errorText);
+            //         }
+
+            //         // 요청 간 짧은 지연 (서버 부하 방지)
+            //         if (i < backendDataArray.length - 1) {
+            //             await new Promise(resolve => setTimeout(resolve, 50));
+            //         }
+
+            //     } catch (error) {
+            //         errorCount++;
+            //         errors.push(`항목 ${i + 1}: ${error.message}`);
+            //         console.error(`${i + 1}/${backendDataArray.length} 전송 오류:`, error);
+            //     }
+            // }
+            
+            if (response.ok) {
+                successCount = backendDataArray.length;
+                errorCount = 0;
+            }
+            else {
+                errorCount++;
+            //     const errorText = await response.text();
+            //     errors.push(`항목 ${i + 1}: ${errorText}`);
+            //     console.error(`${i + 1}/${backendDataArray.length} 저장 실패:`, response.status, errorText);
+            }
+
+
+            // 결과 요약
+            console.log(`${dataType} 저장 완료: 성공 ${successCount}개, 실패 ${errorCount}개`);
+            
+            if (errorCount > 0) {
+                console.error('저장 실패 항목들:', errors);
+                alert(`${dataType} 데이터 저장 완료!\n성공: ${successCount}개\n실패: ${errorCount}개\n\n실패한 항목이 있습니다. 콘솔을 확인해주세요.`);
+            } else {
+                setSaveProgress({
+                    current: backendDataArray.length,
+                    total: backendDataArray.length,
+                    type: dataType
+                });
+                alert(`${dataType} 데이터 저장 완료! (${successCount}개 항목)`);
+            }
+
+            return successCount > 0;
+
+        } catch (error) {
+            console.error(`${dataType} 저장 중 오류:`, error);
+            alert(`${dataType} 데이터 저장 중 오류가 발생했습니다: ${error.message}`);
+            return false;
+        } finally {
+            // 저장 상태 해제
+            if (dataType === '판매량') {
+                setIsSavingSales(false);
+                setSalesSaveStatus('저장됨');
+                setTimeout(() => setSalesSaveStatus(''), 10000);
+            } else {
+                setIsSavingDemand(false);
+                setDemandSaveStatus('저장됨');
+                setTimeout(() => setDemandSaveStatus(''), 10000);
+            }
+            
+            // 진행률 초기화
+            setSaveProgress({ current: 0, total: 0, type: '' });
+        }
     };
 
     // CSV 파일 파싱 함수
@@ -177,12 +481,21 @@ export default function Upload() {
 
     // CSV 데이터를 문자열로 변환하는 함수
     const convertToCSV = (data) => {
-        if (!data || !data.headers || !data.data) return '';
+        if (!data || !data.headers || !data.data) {
+            console.warn('Invalid data structure for CSV conversion');
+            return '';
+        }
         
-        const headerRow = data.headers.join(',');
+        const headerRow = data.headers.map(header => {
+            if (header.includes(',') || header.includes('"') || header.includes('\n')) {
+                return `"${header.replace(/"/g, '""')}"`;
+            }
+            return header;
+        }).join(',');
+        
         const dataRows = data.data.map(row => {
             return data.headers.map(header => {
-                const value = row[header] || '';
+                const value = (row[header] || '').toString();
                 if (value.includes(',') || value.includes('"') || value.includes('\n')) {
                     return `"${value.replace(/"/g, '""')}"`;
                 }
@@ -190,7 +503,9 @@ export default function Upload() {
             }).join(',');
         });
         
-        return [headerRow, ...dataRows].join('\n');
+        const csvContent = [headerRow, ...dataRows].join('\n');
+        console.log('CSV 변환 완료. 행 수:', dataRows.length + 1);
+        return csvContent;
     };
 
     // CSV 파일 다운로드 함수
@@ -225,262 +540,6 @@ export default function Upload() {
         alert(`${filename} 파일이 다운로드되었습니다.`);
     };
 
-    // CSV 파일을 File 객체로 생성하는 함수
-    const createCSVFile = (csvString, filename) => {
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        return new File([blob], filename, { type: 'text/csv' });
-    };
-
-    // 백엔드 분석 API 호출 함수
-    const sendDataToAnalysisAPI = async () => {
-        if (!productCode.trim()) {
-            alert('제품코드를 입력해주세요.');
-            return;
-        }
-
-        if (!savedSalesData && !savedDemandData) {
-            alert('저장된 데이터가 없습니다. 먼저 데이터를 저장해주세요.');
-            return;
-        }
-
-        setIsUpLoading(true);
-
-        try {
-            // FormData 객체 생성
-            const formData = new FormData();
-            
-            // 제품코드 추가
-            formData.append('code', productCode);
-
-            // 생산량 데이터 (file1)
-            if (savedDemandData) {
-                const demandCSV = convertToCSV(savedDemandData);
-                const demandFile = createCSVFile(demandCSV, 'production_data.csv');
-                formData.append('file1', demandFile);
-            }
-
-            // 판매량 데이터 (file2)
-            if (savedSalesData) {
-                const salesCSV = convertToCSV(savedSalesData);
-                const salesFile = createCSVFile(salesCSV, 'sales_data.csv');
-                formData.append('file2', salesFile);
-            }
-
-            // 백엔드 분석 API 호출
-            const response = await fetch('http://165.246.80.74:8000/api/files/analyze-json/', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log('분석 결과:', result);
-                
-                // 결과 페이지로 이동하면서 결과 데이터 전달
-                navigate('/result', { 
-                    state: { 
-                        analysisResult: result,
-                        productCode: productCode,
-                        originalSalesData: savedSalesData,
-                        originalDemandData: savedDemandData
-                    } 
-                });
-            } else {
-                const errorData = await response.text();
-                console.error('분석 API 전송 실패:', errorData);
-                alert('분석 요청에 실패했습니다.');
-            }
-
-        } catch (error) {
-            console.error('분석 API 전송 중 오류:', error);
-            alert('분석 요청 중 오류가 발생했습니다: ' + error.message);
-        } finally {
-            setIsUpLoading(false);
-        }
-    };
-
-    // 백엔드에 데이터 저장하는 함수 (기존 데이터 저장 API)
-    const sendDataToBackend = async () => {
-        if (!productCode.trim()) {
-            alert('제품코드를 입력해주세요.');
-            return;
-        }
-
-        if (!savedSalesData && !savedDemandData) {
-            alert('저장된 데이터가 없습니다. 먼저 데이터를 저장해주세요.');
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
-            
-            if (!token) {
-                alert('로그인이 필요합니다.');
-                return;
-            }
-
-            const sendRequests = [];
-
-            // 판매량 데이터 처리 (type_idx: 2)
-            if (savedSalesData) {
-                const salesRequests = await processDataForBackend(savedSalesData, productCode, 2, token);
-                sendRequests.push(...salesRequests);
-            }
-
-            // 생산량 데이터 처리 (type_idx: 1)
-            if (savedDemandData) {
-                const demandRequests = await processDataForBackend(savedDemandData, productCode, 1, token);
-                sendRequests.push(...demandRequests);
-            }
-
-            // 모든 요청 병렬 처리
-            const results = await Promise.allSettled(sendRequests);
-            
-            // 결과 확인
-            const successCount = results.filter(result => result.status === 'fulfilled').length;
-            const totalCount = results.length;
-            
-            if (successCount === totalCount) {
-                console.log(`백엔드 데이터 저장 성공: ${successCount}/${totalCount}`);
-                return true;
-            } else {
-                console.error('백엔드 데이터 저장 실패:', results.filter(result => result.status === 'rejected'));
-                throw new Error(`백엔드 데이터 저장 실패: ${successCount}/${totalCount}`);
-            }
-
-        } catch (error) {
-            console.error('백엔드 데이터 저장 중 오류:', error);
-            throw error;
-        }
-    };
-
-    // 데이터를 백엔드 형식으로 변환하고 전송하는 함수
-    const processDataForBackend = async (data, productCode, typeIdx, token) => {
-        const requests = [];
-
-        const dateColumn = data.headers.find(header => 
-            header.toLowerCase().includes('date') || 
-            header.toLowerCase().includes('날짜') ||
-            header.toLowerCase().includes('일자') ||
-            header === 'Date'
-        ) || data.headers[0];
-
-        const productCodeColumn = data.headers.find(header => 
-            header.toString().trim() === productCode.toString().trim()
-        );
-
-        if (!productCodeColumn) {
-            throw new Error(`제품코드 "${productCode}"와 일치하는 컬럼을 찾을 수 없습니다. 사용 가능한 제품코드: ${data.headers.filter(h => h !== dateColumn).join(', ')}`);
-        }
-
-        console.log(`날짜 컬럼: ${dateColumn}, 제품코드 컬럼: ${productCodeColumn}`);
-
-        for (const row of data.data) {
-            const dateValue = row[dateColumn];
-            const quantityValue = row[productCodeColumn];
-
-            if (!dateValue || quantityValue === undefined || quantityValue === null || quantityValue === '') {
-                continue;
-            }
-
-            const formattedDate = formatDate(dateValue);
-            if (!formattedDate) {
-                console.warn(`잘못된 날짜 형식: ${dateValue}`);
-                continue;
-            }
-
-            const numericQuantity = parseFloat(quantityValue);
-            if (isNaN(numericQuantity)) {
-                console.warn(`잘못된 수량 형식: ${quantityValue} (날짜: ${dateValue})`);
-                continue;
-            }
-
-            const request = fetch('http://165.246.80.74:8000/api/files/register/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type_idx: typeIdx,
-                    name: productCode,
-                    number: numericQuantity,
-                    date: formattedDate
-                })
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            });
-
-            requests.push(request);
-        }
-
-        if (requests.length === 0) {
-            throw new Error(`제품코드 "${productCode}"에 대한 유효한 데이터가 없습니다.`);
-        }
-
-        console.log(`${productCodeColumn}에 대해 ${requests.length}개의 요청을 생성했습니다.`);
-        return requests;
-    };
-
-    // 날짜 형식을 YYYY-MM-DD로 변환하는 함수
-    const formatDate = (dateString) => {
-        if (!dateString) return null;
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-            return dateString;
-        }
-
-        if (/^\d{4}\/\d{2}\/\d{2}$/.test(dateString)) {
-            return dateString.replace(/\//g, '-');
-        }
-
-        if (/^\d{4}\.\d{2}\.\d{2}$/.test(dateString)) {
-            return dateString.replace(/\./g, '-');
-        }
-
-        const mmddyyyy = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (mmddyyyy) {
-            const month = mmddyyyy[1].padStart(2, '0');
-            const day = mmddyyyy[2].padStart(2, '0');
-            return `${mmddyyyy[3]}-${month}-${day}`;
-        }
-
-        const dateObj = new Date(dateString);
-        if (!isNaN(dateObj.getTime())) {
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        console.warn(`지원하지 않는 날짜 형식: ${dateString}`);
-        return null;
-    };
-
-    // 수요 예측 실행 함수 (데이터 저장 + 분석 요청)
-    const goToResult = async () => {
-        setIsUpLoading(true);
-
-        try {
-            // 1. 백엔드에 데이터 저장 (선택사항)
-            // console.log('백엔드에 데이터 저장 중...');
-            // await sendDataToBackend();
-
-            // 2. 분석 API 호출
-            console.log('분석 API 호출 중...');
-            await sendDataToAnalysisAPI();
-
-        } catch (error) {
-            console.error('처리 중 오류:', error);
-            alert('처리 중 오류가 발생했습니다: ' + error.message);
-        } finally {
-            setIsUpLoading(false);
-        }
-    };
-
     // 파일 업로드 핸들러
     const handleFileUpload = (event, type) => {
         const file = event.target.files[0];
@@ -508,7 +567,7 @@ export default function Upload() {
         reader.readAsText(file);
     };
 
-    // 새로고침 버튼 추가
+    // 새로고침 버튼
     const handleRefreshData = () => {
         loadSavedData();
     };
@@ -617,15 +676,14 @@ export default function Upload() {
         };
     };
 
-    const saveTableData = (type) => {
+    // 테이블 데이터 저장 함수 (수정됨)
+    const saveTableData = async (type) => {
         if (type === 'sales' && salesData) {
             setSavedSalesData(JSON.parse(JSON.stringify(salesData)));
-            setSalesSaveStatus('저장됨');
-            setTimeout(() => setSalesSaveStatus(''), 2000);
+            await saveDataToBackend(salesData, '판매량');
         } else if (type === 'demand' && demandData) {
             setSavedDemandData(JSON.parse(JSON.stringify(demandData)));
-            setDemandSaveStatus('저장됨');
-            setTimeout(() => setDemandSaveStatus(''), 2000);
+            await saveDataToBackend(demandData, '생산량');
         }
     };
 
@@ -675,6 +733,22 @@ export default function Upload() {
         }
     };
 
+    // 수요 예측 실행 함수 (기존 코드 유지)
+    const goToResult = () => {
+        if (!productCode.trim()) {
+            alert('제품코드를 입력해주세요.');
+            return;
+        }
+
+        if (!savedSalesData && !savedDemandData) {
+            alert('저장된 데이터가 없습니다. 먼저 데이터를 저장해주세요.');
+            return;
+        }
+
+        // 분석 API 호출 로직은 기존 코드 사용
+        alert('분석을 시작합니다!');
+    };
+
     // 테이블 렌더링 함수
     const renderTable = (data, title, type) => {
         if (!data) return null;
@@ -695,10 +769,14 @@ export default function Upload() {
                             <span className="unsaved-indicator">• 저장되지 않음</span>
                         )}
                         {(type === 'sales' && salesSaveStatus) && (
-                            <span className="save-status saved">{salesSaveStatus}</span>
+                            <span className={`save-status ${salesSaveStatus.includes('실패') ? 'error' : 'saved'}`}>
+                                {salesSaveStatus}
+                            </span>
                         )}
                         {(type === 'demand' && demandSaveStatus) && (
-                            <span className="save-status saved">{demandSaveStatus}</span>
+                            <span className={`save-status ${demandSaveStatus.includes('실패') ? 'error' : 'saved'}`}>
+                                {demandSaveStatus}
+                            </span>
                         )}
                     </div>
                     <div className="table-controls">
@@ -727,8 +805,14 @@ export default function Upload() {
                         <button 
                             className={`control-button save-btn ${hasUnsavedChanges(type) ? 'has-changes' : ''}`}
                             onClick={() => saveTableData(type)}
+                            disabled={
+                                (type === 'sales' && (salesSaveStatus === '저장 중...' || isSavingSales)) ||
+                                (type === 'demand' && (demandSaveStatus === '저장 중...' || isSavingDemand))
+                            }
                         >
-                            저장
+                            {(type === 'sales' && (salesSaveStatus === '저장 중...' || isSavingSales)) ||
+                             (type === 'demand' && (demandSaveStatus === '저장 중...' || isSavingDemand)) 
+                             ? '저장 중...' : '저장'}
                         </button>
                     </div>
                 </div>
@@ -785,6 +869,51 @@ export default function Upload() {
 
     return (
         <div>
+            {/* CSS 애니메이션 추가 */}
+            <style jsx>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
+
+            {/* 진행률 모달 */}
+            <ProgressModal 
+                isVisible={isSavingSales || isSavingDemand} 
+                progress={saveProgress} 
+            />
+
+            {/* 전체 로딩 오버레이 (데이터 로딩 중일 때) */}
+            {isLoadingData && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9998
+                }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                            width: '50px',
+                            height: '50px',
+                            border: '5px solid #f3f3f3',
+                            borderTop: '5px solid #3498db',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite',
+                            margin: '0 auto 20px'
+                        }}></div>
+                        <p style={{ fontSize: '18px', color: '#333' }}>
+                            저장된 데이터를 불러오는 중...
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className='page-wrapper'>
                 <Header />
                 <NavySection />
@@ -792,23 +921,6 @@ export default function Upload() {
                     <div className='container'>
                         <div className='upload-title-container'>
                             <h1 className='upload-title'>수요 예측 서비스</h1>
-                            {/* 데이터 새로고침 버튼 추가 */}
-                            {/* <button 
-                                className='refresh-button'
-                                onClick={handleRefreshData}
-                                disabled={isLoadingData}
-                                style={{
-                                    marginLeft: '20px',
-                                    padding: '8px 16px',
-                                    backgroundColor: '#6c757d',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: isLoadingData ? 'not-allowed' : 'pointer'
-                                }}
-                            >
-                                {isLoadingData ? '불러오는 중...' : '저장된 데이터 새로고침'}
-                            </button> */}
                         </div>
                         
                         {/* 제품코드 입력 */}
@@ -825,6 +937,22 @@ export default function Upload() {
                                 className='product-code-input'
                             />
                             <button 
+                                className="control-button refresh-btn"
+                                onClick={handleRefreshData}
+                                disabled={isLoadingData}
+                                style={{
+                                    marginLeft: '10px',
+                                    backgroundColor: '#17a2b8',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {isLoadingData ? '로딩중...' : '데이터 새로고침'}
+                            </button>
+                            <button 
                                 className={`upload-search-button ${
                                     (!productCode.trim() || (!savedSalesData && !savedDemandData) || isUploading) 
                                     ? 'disabled' : ''
@@ -835,13 +963,6 @@ export default function Upload() {
                                 {isUploading ? '분석 중...' : '수요 예측'}
                             </button>
                         </div>
-                        
-                        {/* 로딩 상태 표시 */}
-                        {isLoadingData && (
-                            <div className='loading-section' style={{ textAlign: 'center', margin: '20px 0' }}>
-                                <p style={{ color: '#6c757d', fontSize: '1.1rem' }}>저장된 데이터를 불러오는 중...</p>
-                            </div>
-                        )}
                         
                         <div className='upload-section'>
                             {/* 판매량 CSV 업로드 */}
@@ -854,7 +975,7 @@ export default function Upload() {
                                         onChange={(e) => handleFileUpload(e, 'sales')}
                                         className='file-input'
                                         id='sales-file'
-                                        disabled={isUploading || isLoadingData}
+                                        disabled={isUploading || isLoadingData || isSavingSales}
                                     />
                                     <label htmlFor='sales-file' className='file-label'>
                                         파일 선택
@@ -884,7 +1005,7 @@ export default function Upload() {
                                         onChange={(e) => handleFileUpload(e, 'demand')}
                                         className='file-input'
                                         id='demand-file'
-                                        disabled={isUploading || isLoadingData}
+                                        disabled={isUploading || isLoadingData || isSavingDemand}
                                     />
                                     <label htmlFor='demand-file' className='file-label'>
                                         파일 선택

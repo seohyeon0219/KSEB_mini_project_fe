@@ -22,8 +22,9 @@ export default function Solution() {
                                     수요 예측 서비스 <br />
                                     알고리즘이란?</h1>
                                 <p className='solution-text-box-subtitle'>
-                                    머신러닝 및 시계열 알고리즘을 활용한<br />
-                                    수요 예측 모델에 대해 확인해보세요.
+                                    수요 예측 서비스 알고리즘은<br />
+                                    <strong>시계열 형태의 데이터</strong>를 기반으로<br/>
+                                    수요를 예측합니다.
                                 </p>
                             </div>
                             <div className='solution-navy-box'>
@@ -35,9 +36,6 @@ export default function Solution() {
                                     </p>
                                 </div>
                                 <div className='solution-white-box'>
-                                    <p className='solution-white-box-navy-text'>수요 예측 서비스 알고리즘은 <strong>시계열 형태의 데이터</strong>를 기반으로 수요를 예측합니다.</p>
-                                    <br /><br />
-
                                     <h2 className='solution-white-box-navy-text'>시계열 데이터란?</h2>
                                     <br /><br />
                                     <p className='solution-white-box-navy-text'><strong>시간의 흐름</strong>에 따라 수집된 데이터로, <strong>평균, 추세, 계절성</strong> 등 다양한 특징을 가지고 있습니다.</p>

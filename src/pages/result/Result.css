@@ -27,7 +27,7 @@
 .section-title {
     font-size: 30px;
     font-weight: bold;
-    color: #34495e;
+    color: #252525;
     margin-bottom: 25px;
     text-align: center;
 }
@@ -63,7 +63,7 @@
 .result-image-title {
     font-size: 1.1rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #383838;
     margin-bottom: 15px;
 }
 
@@ -98,7 +98,7 @@
 .result-table-title {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: #232363;
     margin-bottom: 15px;
     text-align: center;
 }
@@ -167,7 +167,7 @@
 }
 
 .back-button:hover {
-    background-color: #2980b9;
+    background-color: #ffffff;
 }
 
 .home-button {

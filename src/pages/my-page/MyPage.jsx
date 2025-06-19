@@ -11,7 +11,6 @@ import { useAuth } from '../../contexts/AuthContext.jsx'; // AuthContext import 
 export default function MyPage() {
     const navigate = useNavigate();
     const { logout } = useAuth(); // logout 함수 가져오기
-    const API_BASE_URL = 'http://165.246.80.74:8000';
     const code = localStorage.getItem('code');
 
     const getCode = () => localStorage.getItem('code');
@@ -74,7 +73,7 @@ export default function MyPage() {
 
         setIsCheckingEmail(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/accounts/duplicate/email`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/duplicate/email`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ email })
@@ -106,7 +105,7 @@ export default function MyPage() {
 
         setIsCheckingNumber(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/accounts/duplicate/phone`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/duplicate/phone`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ phone: number })
@@ -130,7 +129,7 @@ export default function MyPage() {
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/accounts/update/`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/update/`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(payload)
@@ -172,7 +171,7 @@ export default function MyPage() {
         }
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/accounts/find-by-code/`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/find-by-code/`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ code })

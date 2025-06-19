@@ -41,7 +41,7 @@ export default function SignIn() {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://165.246.80.74:8000/api/accounts/signin', {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accounts/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
