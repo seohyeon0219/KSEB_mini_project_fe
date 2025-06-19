@@ -32,6 +32,273 @@ export default function Upload() {
     const [demandDisplayCount, setDemandDisplayCount] = useState(50);
     const ITEMS_PER_LOAD = 50;
 
+    
+    // CSV 파일을 File 객체로 생성하는 함수
+const createCSVFile = (csvString, filename) => {
+    const blob = new Blob([csvString], { 
+        type: 'text/csv;charset=utf-8;' 
+    });
+    const file = new File([blob], filename, { 
+        type: 'text/csv',
+        lastModified: Date.now()
+    });
+    
+    console.log(`CSV 파일 생성: ${filename}, 크기: ${file.size} bytes`);
+    return file;
+};
+
+// 백엔드 분석 API 호출 함수
+const sendDataToAnalysisAPI = async () => {
+    if (!productCode.trim()) {
+        alert('제품코드를 입력해주세요.');
+        return;
+    }
+
+    if (!savedSalesData && !savedDemandData) {
+        alert('저장된 데이터가 없습니다. 먼저 데이터를 저장해주세요.');
+        return;
+    }
+
+    setIsUpLoading(true);
+
+    try {
+        // 백엔드 URL 설정 확인
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const apiEndpoint = `${backendUrl}/api/files/analyze-files/`;
+        
+        console.log('=== API 호출 디버깅 정보 ===');
+        console.log('백엔드 URL:', backendUrl);
+        console.log('API 엔드포인트:', apiEndpoint);
+        console.log('제품코드:', productCode);
+        console.log('판매량 데이터 존재:', !!savedSalesData);
+        console.log('생산량 데이터 존재:', !!savedDemandData);
+
+        // 두 파일 모두 있는지 확인
+        if (!savedSalesData || !savedDemandData) {
+            alert('분석을 위해서는 판매량과 생산량 데이터가 모두 필요합니다.');
+            return;
+        }
+
+        // FormData 객체 생성
+        const formData = new FormData();
+        
+        // 제품코드 추가
+        formData.append('code', productCode);
+
+        // file1: 생산량 데이터
+        const demandCSV = convertToCSV(savedDemandData);
+        const demandFile = createCSVFile(demandCSV, 'production_data.csv');
+        formData.append('file1', demandFile);
+        console.log('생산량 데이터 (file1) 추가됨 - 크기:', demandFile.size, 'bytes');
+
+        // file2: 판매량 데이터
+        const salesCSV = convertToCSV(savedSalesData);
+        const salesFile = createCSVFile(salesCSV, 'sales_data.csv');
+        formData.append('file2', salesFile);
+        console.log('판매량 데이터 (file2) 추가됨 - 크기:', salesFile.size, 'bytes');
+
+        // FormData 내용 확인
+        console.log('=== FormData 내용 ===');
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}: File - 이름: ${value.name}, 크기: ${value.size} bytes, 타입: ${value.type}`);
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
+
+        console.log('API 요청 시작...');
+        
+        // 백엔드 분석 API 호출
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초 타임아웃
+
+        const response = await fetch(apiEndpoint, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log('응답 상태코드:', response.status);
+        console.log('응답 헤더:', Object.fromEntries(response.headers.entries()));
+
+        if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+
+            if (contentType && contentType.includes('multipart/mixed')) {
+                // Multipart 응답을 ArrayBuffer로 받아서 처리
+                const arrayBuffer = await response.arrayBuffer();
+                const decoder = new TextDecoder('utf-8');
+                const responseText = decoder.decode(arrayBuffer);
+                
+                console.log('Multipart 응답 받음, 길이:', responseText.length);
+                
+                // Multipart 응답 파싱
+                const parsedResponse = parseMultipartResponseImproved(responseText, arrayBuffer);
+                
+                // 결과 페이지로 이동하면서 결과 데이터 전달
+                navigate('/result', { 
+                    state: { 
+                        analysisResult: parsedResponse,
+                        productCode: productCode,
+                        originalSalesData: savedSalesData,
+                        originalDemandData: savedDemandData
+                    } 
+                });
+            } else {
+                // JSON 응답인 경우
+                const result = await response.json();
+                console.log('=== 분석 결과 (JSON) ===');
+                console.log('전체 결과:', result);
+                
+                // 결과 페이지로 이동하면서 결과 데이터 전달
+                navigate('/result', { 
+                    state: { 
+                        analysisResult: result,
+                        productCode: productCode,
+                        originalSalesData: savedSalesData,
+                        originalDemandData: savedDemandData
+                    } 
+                });
+            }
+        } else {
+            const errorData = await response.text();
+            console.error('=== API 오류 정보 ===');
+            console.error('상태코드:', response.status);
+            console.error('상태 텍스트:', response.statusText);
+            console.error('오류 내용:', errorData);
+            
+            // 상태코드별 사용자 친화적 메시지
+            let userMessage = '';
+            switch (response.status) {
+                case 404:
+                    userMessage = `API 엔드포인트를 찾을 수 없습니다.\n요청 URL: ${apiEndpoint}\n서버 설정을 확인해주세요.`;
+                    break;
+                case 400:
+                    userMessage = '잘못된 요청입니다. 데이터 형식을 확인해주세요.\n' + errorData;
+                    break;
+                case 500:
+                    userMessage = '서버 내부 오류가 발생했습니다.\n' + errorData;
+                    break;
+                default:
+                    userMessage = `분석 요청에 실패했습니다. 상태코드: ${response.status}\n${errorData}`;
+            }
+            
+            alert(userMessage);
+        }
+
+    } catch (error) {
+        console.error('=== 네트워크 오류 ===');
+        console.error('오류 타입:', error.name);
+        console.error('오류 메시지:', error.message);
+        console.error('전체 오류:', error);
+        
+        let userMessage = '분석 요청 중 오류가 발생했습니다: ';
+        
+        if (error.name === 'AbortError') {
+            userMessage += '요청이 시간 초과되었습니다. 서버가 응답하지 않습니다.';
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            userMessage += '서버에 연결할 수 없습니다. 네트워크 연결과 서버 상태를 확인해주세요.';
+        } else {
+            userMessage += error.message;
+        }
+        alert(userMessage);
+    } finally {
+        setIsUpLoading(false);
+    }
+};
+
+// 개선된 Multipart 응답 파싱 함수
+const parseMultipartResponseImproved = (responseText, arrayBuffer) => {
+    const boundary = 'boundary123';
+    const result = {
+        csv1: '',
+        csv2: '',
+        image1: null,
+        image2: null,
+        image3: null,
+        image4: null
+    };
+    
+    try {
+        // 텍스트 기반으로 boundary 위치 찾기
+        const boundaryPattern = `--${boundary}`;
+        const parts = responseText.split(boundaryPattern);
+        
+        console.log('Multipart 부분 개수:', parts.length);
+        
+        let csvCount = 0;
+        let imgCount = 0;
+        
+        parts.forEach((part, index) => {
+            console.log(`Part ${index} 처리 중...`);
+            
+            if (part.includes('Content-Type: text/csv')) {
+                csvCount++;
+                console.log(`CSV ${csvCount} 발견`);
+                
+                // CSV 데이터 추출
+                const headerEndIndex = part.indexOf('\r\n\r\n');
+                if (headerEndIndex !== -1) {
+                    let csvData = part.substring(headerEndIndex + 4);
+                    // 다음 boundary 제거
+                    csvData = csvData.split('\r\n--')[0];
+                    csvData = csvData.trim();
+                    
+                    if (csvData) {
+                        result[`csv${csvCount}`] = csvData;
+                        console.log(`CSV ${csvCount} 저장됨, 길이:`, csvData.length);
+                    }
+                }
+            } else if (part.includes('Content-Type: image/png')) {
+                imgCount++;
+                console.log(`Image ${imgCount} 발견`);
+                
+                // 이미지 데이터 추출 (바이너리 처리)
+                const headerEndIndex = part.indexOf('\r\n\r\n');
+                if (headerEndIndex !== -1) {
+                    // ArrayBuffer에서 이미지 바이너리 데이터 추출
+                    const partStartInBuffer = responseText.indexOf(part);
+                    const imageStartInBuffer = partStartInBuffer + headerEndIndex + 4;
+                    
+                    // 다음 boundary까지의 데이터 찾기
+                    const nextBoundaryText = `\r\n--${boundary}`;
+                    const nextBoundaryIndex = responseText.indexOf(nextBoundaryText, imageStartInBuffer);
+                    const imageEndInBuffer = nextBoundaryIndex !== -1 ? nextBoundaryIndex : arrayBuffer.byteLength;
+                    
+                    // 이미지 바이너리 데이터 추출
+                    const imageBuffer = arrayBuffer.slice(imageStartInBuffer, imageEndInBuffer);
+                    
+                    // Base64로 변환
+                    const imageArray = new Uint8Array(imageBuffer);
+                    const imageBase64 = btoa(String.fromCharCode.apply(null, imageArray));
+                    
+                    result[`image${imgCount}`] = imageBase64;
+                    console.log(`Image ${imgCount} 저장됨, Base64 길이:`, imageBase64.length);
+                }
+            }
+        });
+        
+        console.log('최종 파싱 결과:', {
+            csv1Length: result.csv1.length,
+            csv2Length: result.csv2.length,
+            hasImage1: !!result.image1,
+            hasImage2: !!result.image2,
+            hasImage3: !!result.image3,
+            hasImage4: !!result.image4
+        });
+        
+    } catch (error) {
+        console.error('Multipart 파싱 오류:', error);
+    }
+    
+    return result;
+};
+
+
     // 진행률 표시 모달 컴포넌트
     const ProgressModal = ({ isVisible, progress }) => {
         if (!isVisible) return null;
@@ -137,8 +404,8 @@ export default function Upload() {
             setIsLoadingData(true);
             console.log('저장된 데이터 로딩 시작...');
             
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://165.246.80.9:8000';
-            const response = await fetch(`${backendUrl}/api/files/read/`, {
+            // const backendUrl = import.meta.env.VITE_BACKEND_URL;
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/read/`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -349,9 +616,9 @@ export default function Upload() {
                 type: dataType
             });
 
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://165.246.80.9:8000';
+            // const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-            const response = await fetch(`${backendUrl}/api/files/register/`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/register/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -733,8 +1000,8 @@ export default function Upload() {
         }
     };
 
-    // 수요 예측 실행 함수 (기존 코드 유지)
-    const goToResult = () => {
+    // 수요 예측 실행 함수 (수정된 버전)
+    const goToResult = async () => {
         if (!productCode.trim()) {
             alert('제품코드를 입력해주세요.');
             return;
@@ -745,8 +1012,17 @@ export default function Upload() {
             return;
         }
 
-        // 분석 API 호출 로직은 기존 코드 사용
-        alert('분석을 시작합니다!');
+        setIsUpLoading(true);
+
+        try {
+            console.log('분석 API 호출 중...');
+            await sendDataToAnalysisAPI();
+        } catch (error) {
+            console.error('처리 중 오류:', error);
+            alert('처리 중 오류가 발생했습니다: ' + error.message);
+        } finally {
+            setIsUpLoading(false);
+        }
     };
 
     // 테이블 렌더링 함수
@@ -942,11 +1218,11 @@ export default function Upload() {
                                 disabled={isLoadingData}
                                 style={{
                                     marginLeft: '10px',
-                                    backgroundColor: '#17a2b8',
-                                    color: 'white',
-                                    border: 'none',
+                                    backgroundColor: '#ffffff',
+                                    color: '#232363',
+                                    border: '1.5px solid #232363',
                                     padding: '8px 16px',
-                                    borderRadius: '4px',
+                                    borderRadius: '10px',
                                     cursor: 'pointer'
                                 }}
                             >

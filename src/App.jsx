@@ -14,7 +14,7 @@ import Inquiry from './pages/inquiry/Inquiry';
 import AboutUs from './pages/about-us/AboutUs';
 import ContactUs from './pages/contact-us/ContactUs';
 import Solution from './pages/solution/Solution';
-import Prediction from './pages/prediction/Prediction';
+// import Prediction from './pages/prediction/Prediction';
 import Upload from './pages/upload/Upload';
 import FindCode from './pages/find-code/FindCode';
 import MyPage from './pages/my-page/MyPage';
@@ -34,7 +34,7 @@ function App() {
         <Route path='/about-us' element={<AboutUs />}/>
         <Route path='/contact-us' element={<ContactUs />}/>
         <Route path='/solution' element={<Solution />}/>
-        <Route path='/prediction' element={<Prediction />}/>
+        {/* <Route path='/prediction' element={<Prediction />}/> */}
         <Route path='/upload' element={<Upload />}/>
         <Route path='/find-code' element={<FindCode />}/>
         <Route path='/my-page' element={<MyPage/>}/>
