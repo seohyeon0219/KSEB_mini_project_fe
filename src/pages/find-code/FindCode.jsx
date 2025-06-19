@@ -9,8 +9,7 @@ import SignInput from '../../components/ui/sign-input/SignInput';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function FindCode () {
-
+export default function FindCode() {
     const navigate = useNavigate();
 
     const goToHome = () => {
@@ -23,35 +22,69 @@ export default function FindCode () {
 
     const [email, setEmail] = useState('');
     const [number, setNumber] = useState('');
-    // const [isValidCompany, setIsValidCompany] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [foundCode, setFoundCode] = useState('');
 
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
+        setErrorMessage(''); // 입력 시 에러 메시지 초기화
     }
 
     const handleNumberChange = (e) => {
         setNumber(e.target.value);
+        setErrorMessage(''); // 입력 시 에러 메시지 초기화
     }
 
-    const handleFindCode = () => {
+    // API 호출 함수
+    const handleFindCode = async () => {
         setErrorMessage('');
+        setIsLoading(true);
 
-        if (email === 'riskCatch@example.com' && number === '010-0000-0000') {
-            setShowModal(true);
-        } else {
-            setErrorMessage('V 존재하지 않는 업체 정보입니다. 다시 확인해주세요 !');
+        try {
+            // GET 요청에서는 URL 파라미터로 데이터 전송
+            const params = new URLSearchParams({
+                email: email,
+                phone: number
+            });
+            
+            const response = await fetch(`http://165.246.80.74:8000/api/accounts/get-code/?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setFoundCode(data.code); // 백엔드에서 받은 코드 저장
+                setShowModal(true);
+            } else if (response.status === 404) {
+                setErrorMessage('✓ 존재하지 않는 업체 정보입니다. 다시 확인해주세요 !');
+            } else {
+                setErrorMessage('✓ 코드 찾기에 실패했습니다. 다시 시도해주세요.');
+            }
+        } catch (error) {
+            console.error('API 호출 에러:', error);
+            setErrorMessage('✓ 네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsLoading(false);
         }
+    }
+
+    // 코드 복사 기능
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(foundCode)
+            .then(() => {
+                alert('코드가 복사되었습니다!');
+            })
+            .catch(() => {
+                alert('복사에 실패했습니다.');
+            });
     }
 
     // 업체 코드 성공 시 모달
     const [showModal, setShowModal] = useState(false);
-    
-    // const openModal = () => {
-    //     if (isValidCompany === true) {
-    //         setShowModal(true);
-    //     }
-    // }
 
     return (
         <div>
@@ -90,8 +123,13 @@ export default function FindCode () {
                             </div>
                         </div>
                     </div>
-                    <button className={`auth-find-code-button ${email && number ? 'active' : 'disabled'}`}
-                        onClick={handleFindCode} disabled={!email || !number}>업체 코드 찾기</button>
+                    <button 
+                        className={`auth-find-code-button ${email && number && !isLoading ? 'active' : 'disabled'}`}
+                        onClick={handleFindCode} 
+                        disabled={!email || !number || isLoading}
+                    >
+                        {isLoading ? '찾는 중...' : '업체 코드 찾기'}
+                    </button>
                     <div className='valid-message-box'>
                         {errorMessage && (
                             <p className='auth-find-valid-message error'>{errorMessage}</p>
@@ -110,8 +148,8 @@ export default function FindCode () {
                         <div className='sign-up-modal-middle'>
                             <h3 className='sign-up-modal-subtitle'>업체 코드</h3>
                             <div className='sign-up-modal-company-code'>
-                                <p className='auth-company-code'>DQ12345678</p>
-                                <button className='copy-button'>복사</button>
+                                <p className='auth-company-code'>{foundCode}</p>
+                                <button className='copy-button' onClick={handleCopyCode}>복사</button>
                             </div>
                         </div>
                         <div className='sign-up-modal-bottom'>

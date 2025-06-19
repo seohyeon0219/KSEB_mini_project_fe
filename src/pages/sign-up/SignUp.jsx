@@ -60,10 +60,14 @@ export default function SignUp() {
     const [email, setEmail] = useState('');
     const [isValidEmail, setIsValidEmail] = useState(null);
     const [emailFormatValid, setEmailFormatValid] = useState(null);
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
     const handleEmailChange = (e) => {
         const value = e.target.value;
         setEmail(value);
+
+        // 이메일이 변경되면 중복 확인 상태 초기화
+        setIsValidEmail(null);
 
         // 실시간 이메일 형식 검사
         if (value === '') {
@@ -80,11 +84,35 @@ export default function SignUp() {
         }
     }
 
-    const handleCheckEmail = () => {
-        if (email === 'riskCatch@example.com') {
-            setIsValidEmail(false);
-        } else {
-            setIsValidEmail(true);
+    const handleCheckEmail = async () => {
+        if (!email) {
+            alert('이메일을 입력해주세요.');
+            return;
+        }
+        
+        setIsCheckingEmail(true);
+        try {
+            const response = await fetch('http://165.246.80.74:8000/api/accounts/duplicate/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setIsValidEmail(!data.duplicate); // duplicate가 false면 사용 가능
+            } else {
+                alert('이메일 중복 확인에 실패했습니다. 다시 시도해주세요.');
+            }
+        } catch (error) {
+            console.error('이메일 중복 확인 에러:', error);
+            alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsCheckingEmail(false);
         }
     }
 
@@ -92,10 +120,14 @@ export default function SignUp() {
     const [number, setNumber] = useState('');
     const [isValidNumber, setIsValidNumber] = useState(null);
     const [numberFormatValid, setNumberFormatValid] = useState(null);
+    const [isCheckingNumber, setIsCheckingNumber] = useState(false);
 
     const handleNumberChange = (e) => {
         const value = e.target.value;
         setNumber(value);
+
+        // 전화번호가 변경되면 중복 확인 상태 초기화
+        setIsValidNumber(null);
 
         // 실시간 전화번호 형식 검사
         if (value === '') {
@@ -113,19 +145,82 @@ export default function SignUp() {
         }
     }
 
-    const handleCheckNumber = () => {
-        if (number === '010-0000-0000') {
-            setIsValidNumber(false);
-        } else {
-            setIsValidNumber(true);
+    const handleCheckNumber = async () => {
+        if (!numberFormatValid || !number) return;
+        
+        setIsCheckingNumber(true);
+        try {
+            const response = await fetch('http://165.246.80.74:8000/api/accounts/duplicate/phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    phone: number
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setIsValidNumber(!data.duplicate); // duplicate가 false면 사용 가능
+            } else {
+                alert('전화번호 중복 확인에 실패했습니다. 다시 시도해주세요.');
+            }
+        } catch (error) {
+            console.error('전화번호 중복 확인 에러:', error);
+            alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsCheckingNumber(false);
         }
     }
 
     // sign up 성공 시 모달
     const [showModal, setShowModal] = useState(false);
+    const [generatedCode, setGeneratedCode] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const openModal = () => {
-        setShowModal(true);
+    // API 호출 함수
+    const handleSignUp = async () => {
+        setIsLoading(true);
+        
+        try {
+            const response = await fetch('http://165.246.80.74:8000/api/accounts/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: companyName,        // 상호명을 name으로 전송
+                    manager: name,            // 사업자 이름을 manager로 전송
+                    email: email,
+                    phone: number
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setGeneratedCode(data.code);  // 백엔드에서 받은 코드 저장
+                setShowModal(true);
+            } else {
+                alert('등록에 실패했습니다. 다시 시도해주세요.');
+            }
+        } catch (error) {
+            console.error('API 호출 에러:', error);
+            alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    // 코드 복사 기능
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(generatedCode)
+            .then(() => {
+                alert('코드가 복사되었습니다!');
+            })
+            .catch(() => {
+                alert('복사에 실패했습니다.');
+            });
     }
 
     return (
@@ -173,12 +268,12 @@ export default function SignUp() {
                                 {/* 사업자명 입력 결과 실시간 */}
                                 <div className='valid-message-box'>
                                     {isValidName === true && (
-                                        <p className='sign-valid-message success'>V 올바른 형식입니다.</p>
+                                        <p className='sign-valid-message success'>✓ 올바른 형식입니다.</p>
                                     )}
                                     {isValidName === false && name.length > 0 && (name.length < 1 || name.length > 10) && (
                                         <p className='sign-valid-message error'>✓ 1~10자 이내로 입력해주세요.</p>
                                     )}
-                                    {isValidName === false && name.length >= 1 && name.length > 10 && (
+                                    {isValidName === false && name.length >= 1 && name.length <= 10 && (
                                         <p className='sign-valid-message error'>✓ 한글, 영문, 숫자만 입력 가능합니다.</p>
                                     )}
                                 </div>
@@ -212,9 +307,11 @@ export default function SignUp() {
                                 </div>
                             </div>
                             <button 
-                                disabled={!emailFormatValid || !email} 
+                                disabled={!emailFormatValid || !email || isCheckingEmail} 
                                 className={`check-button ${isValidEmail === true ? 'confirmed' : 'disabled'}`}
-                                onClick={handleCheckEmail}>중복확인</button>
+                                onClick={handleCheckEmail}>
+                                {isCheckingEmail ? '확인 중...' : '중복확인'}
+                            </button>
                         </div>
                         <div className='sign-up-form'>
                             <label htmlFor='number' className='code'>전화번호</label>
@@ -244,18 +341,22 @@ export default function SignUp() {
                                 </div>
                             </div>
                             <button 
-                                disabled={!numberFormatValid || !number} 
+                                disabled={!numberFormatValid || !number || isCheckingNumber} 
                                 className={`check-button ${isValidNumber === true ? 'confirmed' : 'disabled'}`}
-                                onClick={handleCheckNumber}>중복확인</button>
+                                onClick={handleCheckNumber}>
+                                {isCheckingNumber ? '확인 중...' : '중복확인'}
+                            </button>
                         </div>
                     </div>
 
                     <button className={`auth-sign-button ${
                         isValidCompanyName === true && isValidName === true && isValidEmail === true && isValidNumber === true
                         ? 'active' : 'disabled'}`} 
-                        onClick={openModal}
-                        disabled={!(isValidCompanyName === true && isValidName === true && isValidEmail === true && isValidNumber === true)}
-                        >SIGN UP</button>
+                        onClick={handleSignUp}
+                        disabled={!(isValidCompanyName === true && isValidName === true && isValidEmail === true && isValidNumber === true) || isLoading}
+                        >
+                        {isLoading ? '등록 중...' : 'SIGN UP'}
+                    </button>
                 </main>
             </div>
             <Footer />
@@ -269,8 +370,8 @@ export default function SignUp() {
                         <div className='sign-up-modal-middle'>
                             <h3 className='sign-up-modal-subtitle'>업체 코드</h3>
                             <div className='sign-up-modal-company-code'>
-                                <p className='auth-company-code'>DQ12345678</p>
-                                <button className='copy-button'>복사</button>
+                                <p className='auth-company-code'>{generatedCode}</p>
+                                <button className='copy-button' onClick={handleCopyCode}>복사</button>
                             </div>
                         </div>
                         <div className='sign-up-modal-bottom'>

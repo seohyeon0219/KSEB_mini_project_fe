@@ -18,6 +18,7 @@ import Prediction from './pages/prediction/Prediction';
 import Upload from './pages/upload/Upload';
 import FindCode from './pages/find-code/FindCode';
 import MyPage from './pages/my-page/MyPage';
+import Result from './pages/result/Result';
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
         <Route path='/upload' element={<Upload />}/>
         <Route path='/find-code' element={<FindCode />}/>
         <Route path='/my-page' element={<MyPage/>}/>
+        <Route path='/result' element={<Result />}/>
         
       </Routes>
     </BrowserRouter>
